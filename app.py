@@ -10,18 +10,15 @@ app = Flask(__name__)
 
 @app.route('/connections', methods=["GET"])
 def get_connections():
-    # URL = 'https://cp.hnonline.sk/kosice/spojenie/vysledky/?f=Stani%C4%8Dn%C3%A9%20n%C3%A1m.&fc=402003&t=Technick%C3%A1%20univerzita&tc=402003'
-
     url =" https://cp.hnonline.sk/"
     trans_type = request.args.get('type')
     start = request.args.get('start')
     dest = request.args.get('dest')
-    # time = request.args.get('time')
+    time = request.args.get('time')
 
     trans_type = encrypt_for_url(trans_type)
     start = encrypt_for_url(start)
     dest = encrypt_for_url(dest)
-    # time = encrypt_for_url(time)
 
     if trans_type.__contains__("mhd") or trans_type.__contains__("kosice"):
         url = url + "kosice"
@@ -31,8 +28,10 @@ def get_connections():
     url = url + "/spojenie/vysledky/"
     url = url + "?f=" + start
     url = url + "&t=" + dest
+    date_time = time.split("_")
+    url = url + "&date=" + date_time[0]
+    url = url + "&time=" + date_time[1]
 
-    print(url)
     page = requests.get(url)
 
     soup = BeautifulSoup(page.content, 'html.parser')
@@ -40,7 +39,6 @@ def get_connections():
     results = soup.find(id='content')
 
     connection_details = results.find_all('div', class_='connection-details')
-    # print(connection_details)
 
     data = {"data": []}
 
