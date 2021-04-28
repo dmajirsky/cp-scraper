@@ -1,5 +1,6 @@
 import json
 import requests
+import datetime
 from bs4 import BeautifulSoup
 from flask import Flask
 from flask import request
@@ -29,44 +30,8 @@ def get_connections():
     url = url + "?f=" + start
     url = url + "&t=" + dest
     date_time = time.split("_")
-    url = url + "&date=" + date_time[0]
-    url = url + "&time=" + date_time[1]
 
-    page = requests.get(url)
-
-    soup = BeautifulSoup(page.content, 'html.parser')
-
-    results = soup.find(id='content')
-
-    connection_details = results.find_all('div', class_='connection-details')
-
-    data = {"data": []}
-
-    for detail in connection_details:
-
-        outsideOfPopup = detail.find_all('div', class_='outside-of-popup')
-        connection = {"connection": []}
-
-        for outside in outsideOfPopup:
-            link = {}
-            number = outside.find('div', class_='title-container').find('span')
-            firstTime = outside.find('li', class_='item active').find('p', class_='reset time')
-            firstStation = outside.find('li', class_='item active').find('p', class_='station')
-            lastTime = outside.find('li', class_='item active last').find('p', class_='reset time')
-            lastStation = outside.find('li', class_='item active last').find('p', class_='station')
-
-            # print(number.text)
-            # print(str(firstTime.text) + " " + str(firstStation.text))
-            # print(str(lastTime.text) + " " + str(lastStation.text))
-            link["number"] = number.text
-            link["first-time"] = str(firstTime.text)
-            link["first-station"] = str(firstStation.text)
-            link["last-time"] = str(lastTime.text)
-            link["last-station"] = str(lastStation.text)
-            connection["connection"].append(link)
-
-        # print("------------------------------")
-        data["data"].append(connection)
+    data = do_page_request(url, date_time)
 
     json_object = json.dumps(data, indent=4, ensure_ascii=False)
     print(json_object)
@@ -123,6 +88,54 @@ def encrypt_for_url(value):
         str_list[idx] = switcher.get(i, i)
         idx += 1
     return "".join(str_list)
+
+
+def do_page_request(url, date_time):
+    url_with_time = url + "&date=" + date_time[0]
+    url_with_time = url_with_time + "&time=" + date_time[1]
+
+    page = requests.get(url_with_time)
+    page.status_code
+
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    results = soup.find(id='content')
+
+    connection_details = results.find_all('div', class_='connection-details')
+
+    data = {"data": []}
+
+    for detail in connection_details:
+
+        outsideOfPopup = detail.find_all('div', class_='outside-of-popup')
+        connection = {"connection": []}
+
+        for outside in outsideOfPopup:
+            try:
+                link = {}
+                number = outside.find('div', class_='title-container').find('span')
+                firstTime = outside.find('li', class_='item active').find('p', class_='reset time')
+                firstStation = outside.find('li', class_='item active').find('p', class_='station')
+                lastTime = outside.find('li', class_='item active last').find('p', class_='reset time')
+                lastStation = outside.find('li', class_='item active last').find('p', class_='station')
+
+                # print(number.text)
+                # print(str(firstTime.text) + " " + str(firstStation.text))
+                # print(str(lastTime.text) + " " + str(lastStation.text))
+                link["number"] = number.text
+                link["first-time"] = str(firstTime.text)
+                link["first-station"] = str(firstStation.text)
+                link["last-time"] = str(lastTime.text)
+                link["last-station"] = str(lastStation.text)
+                connection["connection"].append(link)
+            except:
+                date_obj = datetime.datetime.strptime(date_time[0], "%d.%m.%Y") + datetime.timedelta(days=1)
+                date_time[0] = date_obj.strftime("%d.%m.%Y")
+                date_time[1] = "00:00"
+                return do_page_request(url, date_time)
+
+        data["data"].append(connection)
+        return data
 
 
 if __name__ == '__main__':
