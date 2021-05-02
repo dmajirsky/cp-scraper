@@ -95,7 +95,6 @@ def do_page_request(url, date_time):
     url_with_time = url_with_time + "&time=" + date_time[1]
 
     page = requests.get(url_with_time)
-    page.status_code
 
     soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -105,10 +104,10 @@ def do_page_request(url, date_time):
 
     data = {"data": []}
 
+    connection = {"connection": []}
     for detail in connection_details:
 
         outsideOfPopup = detail.find_all('div', class_='outside-of-popup')
-        connection = {"connection": []}
 
         for outside in outsideOfPopup:
             try:
@@ -119,9 +118,6 @@ def do_page_request(url, date_time):
                 lastTime = outside.find('li', class_='item active last').find('p', class_='reset time')
                 lastStation = outside.find('li', class_='item active last').find('p', class_='station')
 
-                # print(number.text)
-                # print(str(firstTime.text) + " " + str(firstStation.text))
-                # print(str(lastTime.text) + " " + str(lastStation.text))
                 link["number"] = number.text
                 link["first-time"] = str(firstTime.text)
                 link["first-station"] = str(firstStation.text)
@@ -134,8 +130,8 @@ def do_page_request(url, date_time):
                 date_time[1] = "00:00"
                 return do_page_request(url, date_time)
 
-        data["data"].append(connection)
-        return data
+    data["data"].append(connection)
+    return data
 
 
 if __name__ == '__main__':
