@@ -104,9 +104,9 @@ def do_page_request(url, date_time):
 
     data = {"data": []}
 
-    connection = {"connection": []}
     for detail in connection_details:
 
+        connection = {"connection": []}
         outsideOfPopup = detail.find_all('div', class_='outside-of-popup')
 
         for outside in outsideOfPopup:
@@ -129,8 +129,8 @@ def do_page_request(url, date_time):
                 date_time[0] = date_obj.strftime("%d.%m.%Y")
                 date_time[1] = "00:00"
                 return do_page_request(url, date_time)
+        data["data"].append(connection)
 
-    data["data"].append(connection)
     return data
 
 
